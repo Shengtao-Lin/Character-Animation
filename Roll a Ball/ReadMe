@@ -1,0 +1,10 @@
+ReadMe
+Shengtao Lin
+Assignment 0
+
+I do not have the link for the game to play online but there is a html file in the RollABallWebGL folder that can run the game.
+
+The game has 2 players and 15 pickup objects. The Player 1 uses WASD to control the direction of the ball and X to jump. The Player2 uses IJKL to control the ball and M to jump. 
+When player pick up pickup objects, they will receive one point and when they lose a collision or hit the wall they will lose one point. When 120s time limit pass or all 15 objects has been picked up the game will end.
+
+The game will announce when ther is a collision (with player or with wall) happened and when time is only 20s left.
