@@ -10,11 +10,10 @@ public class AgentController : MonoBehaviour
     public LayerMask groundLayer;
 
     List<NavMeshAgent> agents = new List<NavMeshAgent>();
-    List<int> priority = new List<int>();
-    private int rand = 99;
 
     private float distance=99999;
 
+    private RaycastHit agentHitPosition;
     private RaycastHit hitPosition;
 
     private Rigidbody rb;
@@ -31,28 +30,19 @@ public class AgentController : MonoBehaviour
         if(Input.GetMouseButtonDown(0))
         {
             // left click: select an agent
-            Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitPosition, 100);
-            if(hitPosition.collider.tag == "Agent")
+            Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out agentHitPosition, 100);
+            if(agentHitPosition.collider.tag == "Agent")
             {
-                MeshRenderer temp_render = hitPosition.collider.GetComponent<MeshRenderer>();
-                NavMeshAgent temp_agent = hitPosition.collider.GetComponent<NavMeshAgent>();
+                MeshRenderer temp_render = agentHitPosition.collider.GetComponent<MeshRenderer>();
+                NavMeshAgent temp_agent = agentHitPosition.collider.GetComponent<NavMeshAgent>();
 
                 if(!agents.Contains(temp_agent))
                 {
-                    while(priority.Contains(rand))
-                    {
-                        rand = (int)Random.Range(0,99);
-                        //Debug.Log("rand = " + rand);
-                    }
-                    priority.Add(rand);
-                    temp_agent.avoidancePriority = rand;
                     temp_render.material = clicked;
                     agents.Add(temp_agent);
                 }
                 else
                 {
-                    Debug.Log("removing " + temp_agent.avoidancePriority);
-                    priority.Remove(temp_agent.avoidancePriority);
                     temp_render.material = new Material(Shader.Find("Diffuse"));
                     agents.Remove(temp_agent);
                 }
@@ -61,7 +51,8 @@ public class AgentController : MonoBehaviour
         if(Input.GetMouseButtonDown(1))
         {
             // right click: move seletced agents
-            hitPosition = getPointUnderCursor();
+            //hitPosition = 
+            Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitPosition, 100, groundLayer);
             
             foreach(NavMeshAgent agent in agents)
             {
@@ -69,13 +60,6 @@ public class AgentController : MonoBehaviour
             }
         }
         BreakAgent();
-    }
-
-    
-    private RaycastHit getPointUnderCursor()
-    {
-        Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitPosition, 100, groundLayer);
-        return hitPosition;
     }
 
     private void BreakAgent(){
@@ -105,7 +89,7 @@ public class AgentController : MonoBehaviour
         Debug.Log("Collision Detected "+other.gameObject.name);
         float dis1=Vector3.Distance(other.transform.position,hitPosition.point);
         float dis2=Vector3.Distance(rb.position,hitPosition.point);
-        print("xxx");
+        //print("xxx");
         if(dis1<dis2){
             rb.Sleep();
             StartCoroutine(efekt());
