@@ -13,10 +13,19 @@ public class AgentController : MonoBehaviour
     List<int> priority = new List<int>();
     private int rand = 99;
 
+    private float distance=99999;
+
     private RaycastHit hitPosition;
+
+    private Rigidbody rb;
 
 
     // Update is called once per frame
+
+
+    void Start(){
+        rb = GetComponent<Rigidbody>();
+    }
     void Update()
     {
         if(Input.GetMouseButtonDown(0))
@@ -59,6 +68,7 @@ public class AgentController : MonoBehaviour
                 agent.destination = hitPosition.point;
             }
         }
+        BreakAgent();
     }
 
     
@@ -66,6 +76,47 @@ public class AgentController : MonoBehaviour
     {
         Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitPosition, 100, groundLayer);
         return hitPosition;
+    }
+
+    private void BreakAgent(){
+        distance=0;
+        foreach(NavMeshAgent x in agents){
+            Vector3 a=x.transform.position;
+            Vector3 d=hitPosition.point;
+            a.y = 0;
+            d.y=0;
+            distance+=Vector3.Distance(a,d);
+        }
+        //print(distance/agents.Count);
+        if(distance/agents.Count<=1.0){
+            foreach(NavMeshAgent x in agents){
+                x.isStopped = true;
+                //print("xxxxx");
+            }
+        }else{
+            foreach(NavMeshAgent x in agents){
+                x.isStopped = false;
+                
+            }
+        }
+    }
+
+    void OnTriggerEnter(Collider other){
+        Debug.Log("Collision Detected "+other.gameObject.name);
+        float dis1=Vector3.Distance(other.transform.position,hitPosition.point);
+        float dis2=Vector3.Distance(rb.position,hitPosition.point);
+        print("xxx");
+        if(dis1<dis2){
+            rb.Sleep();
+            StartCoroutine(efekt());
+            rb.WakeUp();
+            
+        }
+
+    }
+     IEnumerator efekt ()
+    { 
+        yield return new WaitForSeconds(2f); 
     }
     
 }
