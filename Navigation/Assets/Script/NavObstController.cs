@@ -55,19 +55,19 @@ public class NavObstController : MonoBehaviour
         //handle null navObstacles??
         if(Input.GetKey(forward))
         {
-            navObstacles.Translate(Vector3.forward * Time.deltaTime * speed);
+            navObstacles.Translate(Vector3.forward * Time.deltaTime * speed , Space.World);
         }
         if(Input.GetKey(backward))
         {
-            navObstacles.Translate(Vector3.forward * Time.deltaTime * speed * -1);
+            navObstacles.Translate(Vector3.forward * Time.deltaTime * speed * -1,Space.World);
         }
         if(Input.GetKey(left))
         {
-            navObstacles.Translate(Vector3.left * Time.deltaTime * speed);
+            navObstacles.Translate(Vector3.left * Time.deltaTime * speed,Space.World);
         }
         if(Input.GetKey(right))
         {
-            navObstacles.Translate(Vector3.left * Time.deltaTime * speed * -1);
+            navObstacles.Translate(Vector3.left * Time.deltaTime * speed * -1,Space.World);
         }
     }
 }

@@ -8,6 +8,8 @@ public class ObsMove : MonoBehaviour
     public float speed = .2f;
 	public float strength = 9f;
 
+    public float move = 0f;
+
     public int flag;
 
 	private float offset;
@@ -23,13 +25,13 @@ public class ObsMove : MonoBehaviour
         if(flag == 0)
         {
             Vector3 pos = transform.position;
-            pos.x = Mathf.Sin(Time.time*speed+offset)*strength;
+            pos.x = Mathf.Sin(Time.time*speed+offset)*strength + move;
             transform.position=pos;
         }
         if(flag == 1)
         {
             Vector3 pos = transform.position;
-            pos.z = Mathf.Sin(Time.time*speed+offset)*strength;
+            pos.z = Mathf.Sin(Time.time*speed+offset)*strength + move;
             transform.position=pos;
         }
 
