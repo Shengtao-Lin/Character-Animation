@@ -1,0 +1,9 @@
+Report for Navigation Basics
+
+Jianxin Deng , Shengtao Lin
+
+There are two sets of braking mechanisms for the agents. The first mechanism for the agents to stop when they reach the destination. We will calculate the average distance between each selected agent and the destination in x and z planes at every frame. If the average distance is less than 1, all selected agents will brake. The second mechanism is to avoid pushing between agents when passing through bottlenecks. When two agents collide with each other, we will calculate the distance between each of them and the destination. The one further to the destination will brake for 0.5 seconds to give their way to the agent closer to the destination.
+
+One way of implementing how an agent can avoid obstacles without carving is to use collision. We can detect collisions between agents and obstacles then avoid them.
+
+Carving obstacles will cut holes or a box on the navmesh and changes the triangulation of the navmesh around them. Therefore, the agent can go around multiple obstacles and find a new route if the path has been cut out from the navmesh. On the other hand, for non-carving options for a NavMeshObstacle, agents would just avoid collision with obstacles and may eventually collided with obstacles. Usually, we use carving for stational obstacles and not use it on moving obstacles. If we make all obstacles carving, the program has to recalculate all obstacles' hole that curved and the new Navmesh about it every frame which will result in high GPU usage. If we make all obstacles non-carving, the agents would rely on the collision to avoid the obstacles instead of planing the path that avoid them ahead of time. 
