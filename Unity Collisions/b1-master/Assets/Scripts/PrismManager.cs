@@ -181,6 +181,8 @@ public class PrismManager : MonoBehaviour
             }
         }
         
+        // using dictionary to strore each x values and mathc them to the proism it belonds
+        // then traverse the sorted ararry and use hash set to keep updating the potential collision pair
         
 
         yield break;
