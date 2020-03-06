@@ -109,6 +109,68 @@ public class PrismManager : MonoBehaviour
 
     private IEnumerable<PrismCollision> PotentialCollisions()
     {
+        List<Tuple<float,float>> tuple_list = new List<Tuple<float,float>>();
+        float min_x = float.MaxValue;
+        float max_x = float.MinValue;
+
+        // Compute the min_x and max_x for one prism
+        /*
+        Prism p = prisms[1];
+        Tuple<float,float> t = new Tuple<float,float>(0f,0.0f);
+        // float min_x = float.MaxValue;
+        // float max_x = float.MinValue;
+        for(int i=0;i<p.points.Length;i++){
+            //Debug.Log("point " + i + p.points[i].ToString());
+            Vector3 point = p.points[i];
+            min_x = Mathf.Min(min_x,point.x);
+            max_x = Mathf.Max(max_x,point.x);
+            t.Item1 = min_x;
+            t.Item2 = max_x;
+        }
+        tuple_list.Add(t);
+        
+
+        
+        Debug.Log("t min_x = " +t.Item1 +" max_x = "+t.Item2);
+        //check if this shit is added
+        Debug.Log("in tuplelist min_x = " +tuple_list[0].Item1 +" max_x = "+tuple_list[0].Item2);
+        */
+        Hashtable table = new Hashtable();
+        
+        // for each prism, find the pair of x with max difference for x-axis
+        for (int i = 0; i < prisms.Count; i++) {
+            Prism pri = prisms[i];
+            Tuple<float,float> t = new Tuple<float,float>(0f,0f);
+            for(int j=0;j<pri.points.Length;j++){
+                Vector3 point = pri.points[j];
+                min_x = Mathf.Min(min_x,point.x);
+                max_x = Mathf.Max(max_x,point.x);
+                t.Item1 = min_x;
+                t.Item2 = max_x;
+            }
+            table.Add(pri,t);
+            tuple_list.Add(t);
+            min_x = float.MaxValue;
+            max_x = float.MinValue;
+        }
+
+
+        // this line can sort the list
+        //tuple_list = tuple_list.OrderByDescending(t=>t.Item2).ToList();
+
+        //check tupleList
+        tuple_list = tuple_list.OrderByDescending(t=>t.Item2).ToList();
+        for(int i=0;i<tuple_list.Count;i++){
+            Tuple<float,float> tuple = tuple_list[i];
+            Debug.Log("in tuple " + i + " min_x = " +tuple_list[i].Item1 +" max_x = "+tuple_list[i].Item2);
+        }
+        //above part shit can use!!!!!
+        
+        
+
+        
+        // Debug.Log("number of pts = " + p.pointCount);
+        
         for (int i = 0; i < prisms.Count; i++) {
             for (int j = i + 1; j < prisms.Count; j++) {
                 var checkPrisms = new PrismCollision();
@@ -118,8 +180,11 @@ public class PrismManager : MonoBehaviour
                 yield return checkPrisms;
             }
         }
+        
+        
 
         yield break;
+        
     }
 
     private bool CheckCollision(PrismCollision collision)
