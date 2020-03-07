@@ -20,6 +20,9 @@ public class PrismManager : MonoBehaviour
 
     private const float UPDATE_RATE = 0.5f;
 
+    private List< Vector3 > Simplex = new List< Vector3 >();
+    private Vector3 d =new Vector3 (1,0,-1);
+
     #region Unity Functions
 
     void Start()
@@ -193,11 +196,114 @@ public class PrismManager : MonoBehaviour
     {
         var prismA = collision.a;
         var prismB = collision.b;
+        
+        
+
+
+
+        d = new Vector3 (1,0,-1);
+        // get first simplex pt
+        Simplex.Add(CreateSimplex(prismA,prismB,d));
+        // negate d
+        d=-d;
+
+        while(true){
+            // get second simplex pt
+            Simplex.Add(CreateSimplex(prismA,prismB,d));
+
+            if(Vector3.Dot(Simplex[Simplex.Count-1], d)<=0){
+                
+                return false;
+            }else{
+                
+                if(CheckOrigin(d)){
+                    return true;
+                }
+            }
+            break;
+        }
 
         
         collision.penetrationDepthVectorAB = Vector3.zero;
 
         return true;
+    }
+
+    private Vector3 CreateSimplex(Prism prisma, Prism prismb, Vector3 d){
+        Vector3 p1 = GetPt(prisma,d);
+        Vector3 p2 = GetPt(prismb,d);
+        Vector3 p3 = new Vector3((p1 - p2).x, 0,(p1 - p2).z);
+        Debug.Log("new simplex point:" + p3);
+        return p3;
+    }
+
+    private Vector3 GetPt(Prism prismIn, Vector3 d){
+        double result = 0.0;
+        int count = 0;
+        double  dot=0;
+        
+        for (int i=1;i<prismIn.pointCount;i++)
+        {
+            Vector3 point = prismIn.points[i];
+            dot = Vector3.Dot(point, d);
+            if (dot > result){
+                result = dot;
+                count = i;
+            }
+        }
+
+        return prismIn.points[count];
+        // find the vertex of the prismIn that has the greates distance from d
+        
+    }
+
+    private bool CheckOrigin(Vector3 d ){
+        Vector3 p1 = Simplex[Simplex.Count-1];
+        Vector3 np1 = -p1;
+        Vector3 p2;
+        Vector3 p3;
+        Vector3 p2p1;
+        Vector3 p3p1;
+        Vector3 holder;
+        Vector3 cross1;
+        Vector3 cross2;
+
+        // when there are only two simplex pts
+        if(Simplex.Count<3){
+            p2 = Simplex[0];
+            p2p1 = p2 - p1;
+            
+            holder = Vector3.Cross(p2p1,np1);
+
+            d=Vector3.Cross(holder,p2p1);
+            Debug.Log("new d:" + d);
+        }else{
+            //when there are 3 ssimplex pts
+            p2=Simplex[1];
+            p3=Simplex[0];
+            p3p1=p3-p1;
+            p2p1=p2-p1;
+            cross1 = Vector3.Cross(Vector3.Cross(p3p1,p2p1),p2p1);
+            cross2 = Vector3.Cross(Vector3.Cross(p2p1,p3p1),p3p1);
+
+            if(Vector3.Dot(cross1,np1)>0){
+                Simplex.RemoveAt(0);
+                d=cross1;
+            }else{
+                if(Vector3.Dot(cross2,np1)>0){
+                    Simplex.RemoveAt(1);
+                    d=cross2;
+                }else{
+                    return true;
+                }
+            }
+            
+
+        
+        }
+        return false;
+        
+
     }
     
     #endregion
