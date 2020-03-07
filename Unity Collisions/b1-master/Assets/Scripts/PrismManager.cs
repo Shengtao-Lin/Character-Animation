@@ -109,35 +109,17 @@ public class PrismManager : MonoBehaviour
 
     private IEnumerable<PrismCollision> PotentialCollisions()
     {
-        List<Tuple<float,float>> tuple_list = new List<Tuple<float,float>>();
+        List<float> all_points = new List<float>();
+        List<PrismCollision> potential_colli = new List<PrismCollision>();
         float min_x = float.MaxValue;
         float max_x = float.MinValue;
 
-        // Compute the min_x and max_x for one prism
-        /*
-        Prism p = prisms[1];
-        Tuple<float,float> t = new Tuple<float,float>(0f,0.0f);
-        // float min_x = float.MaxValue;
-        // float max_x = float.MinValue;
-        for(int i=0;i<p.points.Length;i++){
-            //Debug.Log("point " + i + p.points[i].ToString());
-            Vector3 point = p.points[i];
-            min_x = Mathf.Min(min_x,point.x);
-            max_x = Mathf.Max(max_x,point.x);
-            t.Item1 = min_x;
-            t.Item2 = max_x;
-        }
-        tuple_list.Add(t);
+        HashSet<Prism> set = new HashSet<Prism>();
+        Dictionary<float,Prism> dic = new Dictionary<float, Prism>();
         
-
-        
-        Debug.Log("t min_x = " +t.Item1 +" max_x = "+t.Item2);
-        //check if this shit is added
-        Debug.Log("in tuplelist min_x = " +tuple_list[0].Item1 +" max_x = "+tuple_list[0].Item2);
+        /*  for each prism, find the pair of x with max difference for x-axis
+            load the pair of x into the list
         */
-        Hashtable table = new Hashtable();
-        
-        // for each prism, find the pair of x with max difference for x-axis
         for (int i = 0; i < prisms.Count; i++) {
             Prism pri = prisms[i];
             Tuple<float,float> t = new Tuple<float,float>(0f,0f);
@@ -148,45 +130,90 @@ public class PrismManager : MonoBehaviour
                 t.Item1 = min_x;
                 t.Item2 = max_x;
             }
-            table.Add(pri,t);
-            tuple_list.Add(t);
+            dic.Add(t.Item1,pri);
+            dic.Add(t.Item2,pri);
+            all_points.Add(t.Item1);
+            all_points.Add(t.Item2);
             min_x = float.MaxValue;
             max_x = float.MinValue;
         }
 
+        //sort the list
+        all_points.Sort();
 
-        // this line can sort the list
-        //tuple_list = tuple_list.OrderByDescending(t=>t.Item2).ToList();
-
-        //check tupleList
-        tuple_list = tuple_list.OrderByDescending(t=>t.Item2).ToList();
-        for(int i=0;i<tuple_list.Count;i++){
-            Tuple<float,float> tuple = tuple_list[i];
-            Debug.Log("in tuple " + i + " min_x = " +tuple_list[i].Item1 +" max_x = "+tuple_list[i].Item2);
-        }
-        //above part shit can use!!!!!
-        
-        
-
-        
-        // Debug.Log("number of pts = " + p.pointCount);
-        
-        for (int i = 0; i < prisms.Count; i++) {
-            for (int j = i + 1; j < prisms.Count; j++) {
-                var checkPrisms = new PrismCollision();
-                checkPrisms.a = prisms[i];
-                checkPrisms.b = prisms[j];
-
-                yield return checkPrisms;
+        //sweep and prune list based on x-axis
+        for(int i=0;i<all_points.Count;i++){
+            Prism pri = dic[all_points[i]];
+            if(set.Contains(pri)){
+                set.Remove(pri);
+                foreach(Prism p in set){
+                    var checkPrisms = new PrismCollision();
+                    checkPrisms.a = pri;
+                    checkPrisms.b = p;
+                    potential_colli.Add(checkPrisms);
+                }
+            }
+            else{
+                set.Add(pri);
             }
         }
-        
-        // using dictionary to strore each x values and mathc them to the proism it belonds
-        // then traverse the sorted ararry and use hash set to keep updating the potential collision pair
-        
 
+        // set up for everything for check y-axis
+        dic.Clear();
+        set.Clear();
+        all_points.Clear();
+
+        // reinsert all prims back to the set
+        foreach(PrismCollision colli in potential_colli){
+            Prism a = colli.a;
+            Prism b = colli.b;
+            if(!set.Contains(a))    set.Add(a);
+            if(!set.Contains(b))    set.Add(b);
+        }
+        // find and add min_z and max_z of each prism back to all_points
+        foreach(Prism pri in set){
+            Tuple<float,float> t = new Tuple<float,float>(0f,0f);
+            for(int j=0;j<pri.points.Length;j++){
+                Vector3 point = pri.points[j];
+                min_x = Mathf.Min(min_x,point.z);
+                max_x = Mathf.Max(max_x,point.z);
+                t.Item1 = min_x;
+                t.Item2 = max_x;
+            }
+            dic.Add(t.Item1,pri);
+            dic.Add(t.Item2,pri);
+            all_points.Add(t.Item1);
+            all_points.Add(t.Item2);
+            min_x = float.MaxValue;
+            max_x = float.MinValue;
+        }
+
+        //sort array and set up for last sweep
+        all_points.Sort();
+        set.Clear();
+        potential_colli.Clear();
+
+        //sweep and prune list based on z-axis
+        for(int i=0;i<all_points.Count;i++){
+            Prism pri = dic[all_points[i]];
+            if(set.Contains(pri)){
+                set.Remove(pri);
+                foreach(Prism p in set){
+                    var checkPrisms = new PrismCollision();
+                    checkPrisms.a = pri;
+                    checkPrisms.b = p;
+                    potential_colli.Add(checkPrisms);
+                }
+            }
+            else{
+                set.Add(pri);
+            }
+        }
+
+        foreach(PrismCollision colli in potential_colli){
+            yield return colli;
+        }
         yield break;
-        
     }
 
     private bool CheckCollision(PrismCollision collision)
