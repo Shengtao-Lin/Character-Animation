@@ -5,11 +5,11 @@ using UnityEngine;
 
 public class PrismManager : MonoBehaviour
 {
-    public int prismCount = 10;
+    public int prismCount = 20;
     public float prismRegionRadiusXZ = 5;
-    public float prismRegionRadiusY = 5;
-    public float maxPrismScaleXZ = 5;
-    public float maxPrismScaleY = 5;
+    public float prismRegionRadiusY = 0;
+    public float maxPrismScaleXZ = 3;
+    public float maxPrismScaleY = 0;
     public GameObject regularPrismPrefab;
     public GameObject irregularPrismPrefab;
 
@@ -20,8 +20,8 @@ public class PrismManager : MonoBehaviour
 
     private const float UPDATE_RATE = 0.5f;
 
-    private List< Vector3 > Simplex = new List< Vector3 >();
-    private Vector3 d =new Vector3 (1,0,-1);
+
+
 
     #region Unity Functions
 
@@ -212,7 +212,7 @@ public class PrismManager : MonoBehaviour
                 set.Add(pri);
             }
         }
-
+        //Debug.Log("Total # of pc =" + potential_colli.Count);
         foreach(PrismCollision colli in potential_colli){
             yield return colli;
         }
@@ -223,7 +223,11 @@ public class PrismManager : MonoBehaviour
     {
         var prismA = collision.a;
         var prismB = collision.b;
+
+        List< Vector3 > Simplex = new List< Vector3 >();
+        Vector3 d =new Vector3 (1,0,-1);
         
+       
         Simplex.Clear();
         //create a vector as the search direction
         d = new Vector3 (1,0,-1);
@@ -242,9 +246,10 @@ public class PrismManager : MonoBehaviour
                 return false;
             }else{
                 
-                if(CheckOrigin(d)){
-                    //Debug.Log("collides");
-                    collision.penetrationDepthVectorAB = EPADepth(prismA,prismB);
+                if(CheckOrigin(ref d,ref Simplex)){
+                    //Debug.Log("d:" +d);
+                    //collision.penetrationDepthVectorAB=new Vector3(0f,0f,0f);
+                    collision.penetrationDepthVectorAB = EPADepth(prismA,prismB,ref Simplex);
                     //Debug.Log("the depth vector: "+collision.penetrationDepthVectorAB);
                     return true;
 
@@ -268,11 +273,10 @@ public class PrismManager : MonoBehaviour
     }
 
     private Vector3 GetPt(Prism prismIn, Vector3 d){
-        double result = 0.0;
+        double result = float.NegativeInfinity;
         int count = 0;
         double  dot=0;
-        
-        for (int i=1;i<prismIn.pointCount;i++)
+        for (int i=0;i<prismIn.pointCount;i++)
         {
             Vector3 point = prismIn.points[i];
             dot = Vector3.Dot(point, d);
@@ -287,14 +291,13 @@ public class PrismManager : MonoBehaviour
         
     }
 
-    private bool CheckOrigin(Vector3 d ){
+    private bool CheckOrigin(ref Vector3 d, ref List<Vector3> Simplex){
         Vector3 p1 = Simplex[Simplex.Count-1];
         Vector3 np1 = -p1;
         Vector3 p2;
         Vector3 p3;
         Vector3 p2p1;
         Vector3 p3p1;
-        Vector3 holder;
         Vector3 cross1;
         Vector3 cross2;
         //Debug.Log("simplex count:" + Simplex.Count);
@@ -302,10 +305,7 @@ public class PrismManager : MonoBehaviour
         if(Simplex.Count==2){
             p2 = Simplex[0];
             p2p1 = p2 - p1;
-            
-            holder = Vector3.Cross(p2p1,np1);
-
-            d=Vector3.Cross(holder,p2p1);
+            d=Vector3.Cross(Vector3.Cross(p2p1,np1),p2p1);
             //Debug.Log("new d:" + d);
         }else if(Simplex.Count==3){
             //when there are 3 ssimplex pts
@@ -327,11 +327,6 @@ public class PrismManager : MonoBehaviour
                     return true;
                 }
             }
-            
-
-        
-        }else{
-            return false;
         }
         return false;
         
@@ -339,15 +334,17 @@ public class PrismManager : MonoBehaviour
     }
 
 
-    private Vector3 EPADepth(Prism prisma, Prism prismb){
+    private Vector3 EPADepth(Prism prisma, Prism prismb, ref List<Vector3> Simplex){
         Edge e = new Edge();
         Vector3 new_simp;
         double depth;
        while(true){
-           e=GetEdge();
+           e=GetEdge(Simplex);
            new_simp = CreateSimplex(prisma,prismb,e.normalized);
            depth=Vector3.Dot(new_simp,e.normalized);
-           if(depth-e.distance<.0001){
+           //Debug.Log("new depth:" + depth);
+           //Debug.Log("new e.distance:" + e.distance);
+           if(depth-e.distance<.000001){
                return e.normalized;
            }else{
                Simplex.Insert(e.index,new_simp);
@@ -359,9 +356,9 @@ public class PrismManager : MonoBehaviour
         
     }
 
-    private Edge GetEdge(){
+    private Edge GetEdge(List<Vector3> Simplex){
         Edge e = new Edge();
-        Vector3 v1=new Vector3(0,0,0);
+        Vector3 v1;
         Vector3 v2;
         Vector3 v3;
         Vector3 v1o;
@@ -416,8 +413,17 @@ public class PrismManager : MonoBehaviour
         var pushA = -collision.penetrationDepthVectorAB / 2;
         var pushB = collision.penetrationDepthVectorAB / 2;
 
-        prismObjA.transform.position += pushA;
-        prismObjB.transform.position += pushB;
+        
+
+        for (int i = 0; i < collision.a.pointCount; i++)
+        {
+            collision.a.points[i] += pushA;
+        }
+        for (int i = 0; i < collision.b.pointCount; i++)
+        {
+            collision.b.points[i] += pushB;
+        }
+
 
         Debug.DrawLine(prismObjA.transform.position, prismObjA.transform.position + collision.penetrationDepthVectorAB, Color.cyan, UPDATE_RATE);
     }
