@@ -224,43 +224,46 @@ public class PrismManager : MonoBehaviour
         var prismA = collision.a;
         var prismB = collision.b;
         
-        
-
-
-
+        Simplex.Clear();
+        //create a vector as the search direction
         d = new Vector3 (1,0,-1);
         // get first simplex pt
         Simplex.Add(CreateSimplex(prismA,prismB,d));
         // negate d
         d=-d;
+        //print(d);
 
         while(true){
             // get second simplex pt
             Simplex.Add(CreateSimplex(prismA,prismB,d));
-
+            //print(Vector3.Dot(Simplex[Simplex.Count-1], d));
             if(Vector3.Dot(Simplex[Simplex.Count-1], d)<=0){
                 
                 return false;
             }else{
                 
                 if(CheckOrigin(d)){
+                    //Debug.Log("collides");
+                    collision.penetrationDepthVectorAB = EPADepth(prismA,prismB);
+                    //Debug.Log("the depth vector: "+collision.penetrationDepthVectorAB);
                     return true;
+
                 }
             }
-            break;
+            //break;
         }
 
         
-        collision.penetrationDepthVectorAB = Vector3.zero;
+        
 
-        return true;
+        
     }
 
     private Vector3 CreateSimplex(Prism prisma, Prism prismb, Vector3 d){
         Vector3 p1 = GetPt(prisma,d);
-        Vector3 p2 = GetPt(prismb,d);
+        Vector3 p2 = GetPt(prismb,-d);
         Vector3 p3 = new Vector3((p1 - p2).x, 0,(p1 - p2).z);
-        Debug.Log("new simplex point:" + p3);
+        //Debug.Log("new simplex point:" + p3);
         return p3;
     }
 
@@ -294,17 +297,17 @@ public class PrismManager : MonoBehaviour
         Vector3 holder;
         Vector3 cross1;
         Vector3 cross2;
-
+        //Debug.Log("simplex count:" + Simplex.Count);
         // when there are only two simplex pts
-        if(Simplex.Count<3){
+        if(Simplex.Count==2){
             p2 = Simplex[0];
             p2p1 = p2 - p1;
             
             holder = Vector3.Cross(p2p1,np1);
 
             d=Vector3.Cross(holder,p2p1);
-            Debug.Log("new d:" + d);
-        }else{
+            //Debug.Log("new d:" + d);
+        }else if(Simplex.Count==3){
             //when there are 3 ssimplex pts
             p2=Simplex[1];
             p3=Simplex[0];
@@ -327,11 +330,79 @@ public class PrismManager : MonoBehaviour
             
 
         
+        }else{
+            return false;
         }
         return false;
         
 
     }
+
+
+    private Vector3 EPADepth(Prism prisma, Prism prismb){
+        Edge e = new Edge();
+        Vector3 new_simp;
+        double depth;
+       while(true){
+           e=GetEdge();
+           new_simp = CreateSimplex(prisma,prismb,e.normalized);
+           depth=Vector3.Dot(new_simp,e.normalized);
+           if(depth-e.distance<.0001){
+               return e.normalized;
+           }else{
+               Simplex.Insert(e.index,new_simp);
+           }
+
+
+
+       }
+        
+    }
+
+    private Edge GetEdge(){
+        Edge e = new Edge();
+        Vector3 v1=new Vector3(0,0,0);
+        Vector3 v2;
+        Vector3 v3;
+        Vector3 v1o;
+        Vector3 normal;
+        double distance;
+
+        e.distance=999999999999;
+        for(int i=0;i < Simplex.Count; i++){
+            int j=i+1==Simplex.Count ? 0 : i + 1;
+            v1 = Simplex[i];
+            v2 = Simplex[j];
+            //difference between two vertices (the edge)
+            v3 = v2-v1;
+            //distance from v1 to origin
+            v1o = v1;
+            normal = Vector3.Normalize(Vector3.Cross(Vector3.Cross(v3,v1o),v3));
+            
+            distance=Vector3.Dot(normal,v1);
+            if(distance<e.distance&&distance!=0){
+                e.v1=v1;
+                e.v2=v2;
+                e.distance=distance;
+                e.normalized=normal;
+                e.index=j;
+                //Debug.Log("new e:" + e.v1+" "+e.v2+" " +e.normalized);
+            }
+        }
+        
+        return e;
+    }
+
+    private class Edge{
+        public Vector3 v1;
+        public Vector3 v2;
+        public Vector3 normalized;
+        public int index; 
+        public double distance;
+
+    }
+
+    
     
     #endregion
 
