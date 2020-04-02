@@ -99,21 +99,25 @@ public class AgentController : MonoBehaviour
             a.y = 0;
             d.y=0;
             distance+=Vector3.Distance(a,d);
-            if(Vector3.Distance(a,d)<.5){
-                x.isStopped = true;
-            }
         }
         //print(distance/agents.Count);
-        if(distance/allagents.Count<=1.3){
+        if(distance/allagents.Count<=1.4){
             foreach(NavMeshAgent x in allagents){
                 x.isStopped = true;
                 //print("xxxxx");
             }
         }
         
-        if(distance/allagents.Count>1.3){
+        if(distance/allagents.Count>1.4){
             foreach(NavMeshAgent x in allagents){
-                x.isStopped = false;
+                Vector3 a=x.transform.position;
+                Vector3 d=hitPosition.point;
+                if(Vector3.Distance(a,d)<.7){
+                    x.isStopped = true;
+                }else{
+                    x.isStopped = false;
+                }
+
                 
             }
         }
