@@ -73,7 +73,7 @@ public class AgentManager : MonoBehaviour
                 Debug.DrawLine(hit.position, hit.position + Vector3.up * 10, Color.red, 1000000);
                 foreach (var agent in agents)
                 {
-                    //agent.ComputePath(hit.position);
+                    agent.ComputePath(hit.position);
                 }
             }
         }
