@@ -16,7 +16,6 @@ public class Agent : MonoBehaviour
 
     private HashSet<GameObject> perceivedNeighbors = new HashSet<GameObject>();
     private HashSet<GameObject> adjcentWalls = new HashSet<GameObject>();
-    //private List<Tuple<double,double>> locations = new List<Tuple<double,double>>();
 
     void Start()
     {
@@ -95,9 +94,9 @@ public class Agent : MonoBehaviour
 
     private Vector3 ComputeForce()
     {
-        var force = CalculateGoalForce(5)*0.5f+CalculateAgentForce()*0.2f+CalculateWallForce()*0.3f;
+        var force = CalculateGoalForce(5)*0.7f+CalculateAgentForce()*0.3f+CalculateWallForce()*0.3f;
 
-        Debug.DrawLine(transform.position,force,Color.red);
+        //Debug.DrawLine(transform.position,force,Color.red);
 
         if (force != Vector3.zero)
         {
@@ -139,9 +138,6 @@ public class Agent : MonoBehaviour
 
         }
 
-
-        
-
         return agentForce;
     }
 
@@ -167,13 +163,13 @@ public class Agent : MonoBehaviour
             dir.y=0;
 
             var agentWallProj = Vector3.Project(dir, normal);
-            var overlap = (radius+0.5f)-agentWallProj.magnitude;
+            var overlap = (radius+0.5f)-Vector3.Distance(transform.position,wall.transform.position);
 
             wallForce +=Parameters.A * Mathf.Exp(overlap / Parameters.B) * normal;
             wallForce +=Parameters.k * (overlap>0f ? 1:0)*dir;
 
-            //var tangent = Vector3.Cross(Vector3.up, normal);
-            //wallForce += tangent;
+            var tangent = Vector3.Cross(Vector3.up, normal);
+            wallForce += tangent*0.1f;
 
         }
 
