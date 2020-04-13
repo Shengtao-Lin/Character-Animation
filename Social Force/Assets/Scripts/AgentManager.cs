@@ -11,7 +11,7 @@ public class AgentManager : MonoBehaviour
     public GameObject agentPrefab;
     public static Dictionary<GameObject, Agent> agentsObjs = new Dictionary<GameObject, Agent>();
 
-    private static List<Agent> agents = new List<Agent>();
+    public static List<Agent> agents = new List<Agent>();
     private GameObject agentParent;
     private Vector3 destination;
 
