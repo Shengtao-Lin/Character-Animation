@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -16,6 +16,10 @@ public class Agent : MonoBehaviour
 
     private HashSet<GameObject> perceivedNeighbors = new HashSet<GameObject>();
     private HashSet<GameObject> adjcentWalls = new HashSet<GameObject>();
+
+    private List<GameObject> neighborEvaders = new List<GameObject>();
+    private List<GameObject> neighborPursuers = new List<GameObject>();
+    
 
     void Start()
     {
@@ -40,8 +44,8 @@ public class Agent : MonoBehaviour
 
             if (path.Count == 0)
             {
-                gameObject.SetActive(false);
-                AgentManager.RemoveAgent(gameObject);
+                //gameObject.SetActive(false);
+                //AgentManager.RemoveAgent(gameObject);
             }
         }
 
@@ -74,13 +78,29 @@ public class Agent : MonoBehaviour
 
     public void ComputePath(Vector3 destination)
     {
+        
         nma.enabled = true;
         var nmPath = new NavMeshPath();
         nma.CalculatePath(destination, nmPath);
         path = nmPath.corners.Skip(1).ToList();
-        path = new List<Vector3>() { destination };
-        nma.SetDestination(destination);
+        //path = new List<Vector3>() { destination };
+        //nma.SetDestination(destination);
         //nma.enabled = false;
+        
+
+        // leader
+        /*
+        if((int.Parse(name.Split(' ')[1]) == 0))
+        {
+            nma.enabled = true;
+            var nmPath = new NavMeshPath();
+            nma.CalculatePath(destination, nmPath);
+            path = nmPath.corners.Skip(1).ToList();
+            path = new List<Vector3>() { destination };
+            nma.SetDestination(destination);
+            //nma.enabled = false;
+        }
+        */ 
     }
 
     public Vector3 GetVelocity()
@@ -94,7 +114,26 @@ public class Agent : MonoBehaviour
 
     private Vector3 ComputeForce()
     {
-        var force = CalculateGoalForce(5)*0.7f+CalculateAgentForce()*0.3f+CalculateWallForce()*0.3f;
+        var force = Vector3.zero;
+
+        //force = CalculateGoalForce(5)*0.7f+CalculateAgentForce()*0.3f+CalculateWallForce()*0.3f;
+
+        /*
+        // leader
+        if((int.Parse(name.Split(' ')[1])) == 0)
+            force = CalculateGoalForce(5)*0.7f+CalculateAgentForce()*0.3f+CalculateWallForce()*0.3f;
+        else
+            force = CaculateLeaderfollowerForce();
+        */    
+
+        //spiral Force
+        //force = CalculateSpiralForce();
+
+        //pursue and Evade
+        force = CalculatePursueEvade() + CalculateAgentForce()*0.3f;
+
+        //Walk Wall
+        //force = CalculateWallFollower();
 
         //Debug.DrawLine(transform.position,force,Color.red);
 
@@ -181,14 +220,126 @@ public class Agent : MonoBehaviour
     {
         var force = ComputeForce();
         force.y = 0;
+        // growing spriral
+        //rb.AddForce(force * 10, ForceMode.Force);
 
-        rb.AddForce(force * 10, ForceMode.Force);
+        // eavder and pursuer
+        rb.AddRelativeForce(force * 10,ForceMode.Force);
+
+        // Leader
+        /*
+        if((int.Parse(name.Split(' ')[1])) == 0)
+            rb.AddForce(force * 20, ForceMode.Force);
+        else
+            rb.AddRelativeForce(force * 5,ForceMode.Force);
+        */
     }
 
+    private Vector3 CalculateSpiralForce()
+    {
+        var spiralForce = Vector3.zero;
+        var centerDir = Vector3.zero - transform.position;
+        
+        if(centerDir.magnitude > 0)
+        {
+            spiralForce += Vector3.Cross(Vector3.up,centerDir).normalized * 0.01f;
+            spiralForce += centerDir.normalized * 0.0075f;
+        }
+        
+        return spiralForce;
+    }
+
+    private Vector3 CalculatePursueEvade()
+    {
+        var agentForce = Vector3.zero;
+        bool isEvader = (int.Parse(name.Split(' ')[1]) % 2) == 0;
+        
+        if(isEvader)
+        {
+            // I am Evader
+            Debug.DrawLine(transform.position,transform.position + Vector3.up * 3, Color.green, 0.1f);
+            GetComponent<SphereCollider>().radius = 5f;
+
+            foreach(var n in perceivedNeighbors.Where(n => AgentManager.IsAgent(n)))
+            {
+                Agent neighbor = AgentManager.agentsObjs[n];
+                var dir = (transform.position - neighbor.transform.position).normalized;
+
+                var overlap = (radius + neighbor.radius) - Vector3.Distance(transform.position,n.transform.position);
+
+                var otherIsEvader = (int.Parse(n.name.Split(' ')[1]) %2 == 0);
+                if(otherIsEvader)
+                {
+                    agentForce += Mathf.Exp(overlap) * dir * 0.1f;
+                }
+                
+                
+                else
+                {
+                    agentForce += dir * 0.1f;
+                    var tangent = Vector3.Cross(Vector3.up,dir);
+                    agentForce += tangent;
+                }
+                
+            }
+                       
+        }
+        else
+        {
+            // I am Pursuer
+            Debug.DrawLine(transform.position,transform.position + Vector3.up * 3, Color.red, 0.1f);
+
+            if(neighborEvaders.Count == 0)
+            {
+                GetComponent<SphereCollider>().radius *= 1.5f;
+            }
+            else
+            {
+                GameObject evader_gameObj= neighborEvaders[0];
+                Transform trans= evader_gameObj.GetComponent<Transform>();
+                Agent evader = AgentManager.agentsObjs[evader_gameObj];
+                transform.LookAt(evader.transform);
+                Vector3 dir = Vector3.forward * 0.5f;
+                
+                agentForce += dir;
+                
+            }
+        }
+        
+        
+        return agentForce;
+    }
+
+    private Vector3 CaculateLeaderfollowerForce()
+    {
+        var leaderForce = Vector3.zero;
+        Agent leader = AgentManager.agents[0];
+        if((int.Parse(name.Split(' ')[1])) == 0)
+        {
+            return leaderForce;
+        }
+        else
+        {
+            if(Vector3.Distance(leader.transform.position,transform.position) < 1f)
+            {
+                return leaderForce;
+            }
+        }
+
+        transform.LookAt(leader.transform);
+        Vector3 dir = Vector3.forward * 0.1f;
+        leaderForce += dir;
+
+        return leaderForce;
+    }
     public void OnTriggerEnter(Collider other)
     {
         if(AgentManager.IsAgent(other.gameObject)){
             perceivedNeighbors.Add(other.gameObject);
+
+            bool isEvader = (int.Parse(other.name.Split(' ')[1]) % 2) == 0;
+            if(isEvader)    neighborEvaders.Add(other.gameObject);
+            else    neighborPursuers.Add(other.gameObject);
         }
         if(WallManager.IsWall(other.gameObject)){
             adjcentWalls.Add(other.gameObject);
@@ -199,6 +350,10 @@ public class Agent : MonoBehaviour
     {
         if(perceivedNeighbors.Contains(other.gameObject)){
             perceivedNeighbors.Remove(other.gameObject);
+
+            bool isEvader = (int.Parse(other.name.Split(' ')[1]) % 2) == 0;
+            if(isEvader)    neighborEvaders.Remove(other.gameObject);
+            else    neighborPursuers.Remove(other.gameObject);
         }
         if(adjcentWalls.Contains(other.gameObject)){
             adjcentWalls.Remove(other.gameObject);
@@ -207,22 +362,12 @@ public class Agent : MonoBehaviour
 
     public void OnCollisionEnter(Collision collision)
     {
-        /*
-        if(WallManager.IsWall(collision.gameObject)){
-            adjcentWalls.Add(collision.gameObject);
 
-            var wallCentroid = collision.gameObject.transform.position;
-            var pos = transform.position;
-            //var c = collision.contacts[0].point;
-            var normal = pos-wallCentroid;
-        }*/
     }
 
     public void OnCollisionExit(Collision collision)
     {
         
     }
-
-
     #endregion
 }
