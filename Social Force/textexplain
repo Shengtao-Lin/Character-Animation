@@ -1,0 +1,18 @@
+For goal force, we used the mass of the agent * (the desired direction(the difference between goal position and agent position) * the desired speed(the min between max speed and the magnitude of desired direction) - the actual velocity of the agent) / the parameters.T
+
+For agent force, we first find the vector pointing away from agent, the edge to edge distance, and the vector pointing tangential to agent.
+If agents are colliding( the edge to edge distance is showing that) then the force = collision avoidance(repulsive force) + non-penetration(proximity force) + sliding force else force=collision avoidance(repulsive force)
+The repulsive force = A*e^(edge to edge distance/B)*the vector pointing away from agent
+The proximity force = K*edge to edge distance*the vector pointing away from agent
+The sliding force = K*edge to edge distance*Tangential velocity difference * the vector pointing tangential to agent
+
+For wall force, we first find the vector pointing away from wall, the edge to edge distance(from the project of the diretional vector and normal vector), and the vector pointing tangential to agent.
+If agent and wall are colliding(the edge to edge distance is showing that) then the force = collision avoidance(repulsive force) + non-penetration(proximity force) + sliding force else force=collision avoidance(repulsive force)
+The repulsive force = A*e^(edge to edge distance/B)*the normailzed vector pointing away from wall
+The proximity force = K*edge to edge distance*the normailzed vector pointing away from wall
+The sliding force = K*edge to edge distance*Tangential velocity of agent * the vector pointing tangential to agent
+
+For crowd follower, we modified the desired direction of goal force such that the goal direction is only weighted 0.3 and the neighbors direction are weighted 0.7.
+
+//part 1 demo link: https://youtu.be/mk2nA83SA9A
+//part 2 crowd following demo link: https://youtu.be/GXwMsl3ygDQ

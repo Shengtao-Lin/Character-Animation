@@ -44,8 +44,9 @@ public class Agent : MonoBehaviour
 
             if (path.Count == 0)
             {
-                //gameObject.SetActive(false);
-                //AgentManager.RemoveAgent(gameObject);
+                //please comment the following two lines for spiral Force and pursue and Evade
+                gameObject.SetActive(false);
+                AgentManager.RemoveAgent(gameObject);
             }
         }
 
@@ -85,7 +86,7 @@ public class Agent : MonoBehaviour
         path = nmPath.corners.Skip(1).ToList();
         //path = new List<Vector3>() { destination };
         //nma.SetDestination(destination);
-        //nma.enabled = false;
+        nma.enabled = false;
         
 
         // leader
@@ -115,8 +116,8 @@ public class Agent : MonoBehaviour
     private Vector3 ComputeForce()
     {
         var force = Vector3.zero;
-
-        //force = CalculateGoalForce(5)*0.7f+CalculateAgentForce()*0.3f+CalculateWallForce()*0.3f;
+        //part1 force
+        //force = CalculateGoalForce(30)*0.85f+CalculateAgentForce()*0.3f+CalculateWallForce()*0.2f;
 
         /*
         // leader
@@ -126,11 +127,14 @@ public class Agent : MonoBehaviour
             force = CaculateLeaderfollowerForce();
         */    
 
+        //crowd follow
+        //force = CrowdFollowing(60) + CalculateAgentForce()*0.3f+CalculateWallForce()*0.3f;
+
         //spiral Force
         //force = CalculateSpiralForce();
 
         //pursue and Evade
-        force = CalculatePursueEvade() + CalculateAgentForce()*0.3f;
+        //force = CalculatePursueEvade() + CalculateAgentForce()*0.3f;
 
         //Walk Wall
         //force = CalculateWallFollower();
@@ -148,7 +152,7 @@ public class Agent : MonoBehaviour
     
     private Vector3 CalculateGoalForce(float maxS)
     {
-        var desired_direction =Vector3.Normalize(nma.destination - transform.position);
+        var desired_direction =Vector3.Normalize(path[0] - transform.position);
         var desired_speed = desired_direction.normalized * Mathf.Min(desired_direction.magnitude,maxS);
         var goal_force= (mass*(desired_speed-GetVelocity())/Parameters.T);
 
@@ -159,22 +163,32 @@ public class Agent : MonoBehaviour
     private Vector3 CalculateAgentForce()
     {
         var agentForce=Vector3.zero;
+        var A=Parameters.A;
+        var B=Parameters.B;
+        var Kappa=Parameters.Kappa;
+        var K=Parameters.k;
 
         foreach(var n in perceivedNeighbors){
-            if(!AgentManager.IsAgent(n)){
-                continue;
+            if(AgentManager.IsAgent(n)){
+                var neighbor = AgentManager.agentsObjs[n];
+                var pos = transform.position;
+                var neighborpos =neighbor.transform.position;
+                var neighborVelo=neighbor.GetVelocity();
+            
+                var dir = (pos-neighborpos).normalized;// vector pointing away from agent
+                dir.y=0;
+                var overlap = (radius+neighbor.radius)-Vector3.Distance(pos,neighborpos);//edge to edge distance
+                var tangent = Vector3.Cross(Vector3.up, dir);//vector pointing tangential to agent
+
+            
+                if(overlap>0f){
+                    //collision avoidance + non-penetration + sliding force
+                    agentForce +=(A * Mathf.Exp(overlap / B) + K*overlap)*dir + Kappa * overlap * Vector3.Dot(rb.velocity-neighborVelo,tangent)*tangent;
+                }else{
+                    //if the don't touch then we dont need to calculate the non-penetration and sliding force
+                    agentForce += A * Mathf.Exp(overlap / B)* dir;
+                }
             }
-
-            var neighbor = AgentManager.agentsObjs[n];
-            var dir = (transform.position-neighbor.transform.position).normalized;
-            var overlap = (radius+neighbor.radius)-Vector3.Distance(transform.position,n.transform.position);
-
-            agentForce += Parameters.A * Mathf.Exp(overlap / Parameters.B)* dir;
-            agentForce += Parameters.k * (overlap >0f ? 1:0) * dir;
-
-            var tangent = Vector3.Cross(Vector3.up, dir);
-            agentForce += Parameters.Kappa * (overlap>0f ? overlap :0) * Vector3.Dot(rb.velocity-neighbor.GetVelocity(),tangent)*tangent;
-
         }
 
         return agentForce;
@@ -183,32 +197,38 @@ public class Agent : MonoBehaviour
     private Vector3 CalculateWallForce()
     {
         var wallForce = Vector3.zero;
+        var agentForce=Vector3.zero;
+        var A=Parameters.A;
+        var B=Parameters.B;
+        var Kappa=Parameters.Kappa;
+        var K=Parameters.k;
 
         foreach (var wall in adjcentWalls){
-            var wallCentroid = wall.transform.position;
+            var wallpos = wall.transform.position;
             var pos = transform.position;
-            var normal = pos - wallCentroid;
-            normal.y=0;
+            var normal = (pos - wallpos).normalized; // vector pointing away from wall
+
 
             if(Mathf.Abs(normal.x)>Mathf.Abs(normal.z)){
                 normal.z=0;
+                normal.y=0;
             }
             else{
                 normal.x=0;
+                normal.y=0;
             }
-            normal.Normalize();
+            
+            var overlap = (radius+0.5f)-Vector3.Distance(pos,wallpos);//edge to edge distance
+            var tangent = Vector3.Cross(Vector3.up, normal);//vector pointing tangential to agent
 
-            var dir = pos-wallCentroid;
-            dir.y=0;
-
-            var agentWallProj = Vector3.Project(dir, normal);
-            var overlap = (radius+0.5f)-Vector3.Distance(transform.position,wall.transform.position);
-
-            wallForce +=Parameters.A * Mathf.Exp(overlap / Parameters.B) * normal;
-            wallForce +=Parameters.k * (overlap>0f ? 1:0)*dir;
-
-            var tangent = Vector3.Cross(Vector3.up, normal);
-            wallForce += tangent*0.1f;
+            //g(x) part
+            if(overlap>0f){
+                //collision avoidance + non-penetration - sliding force
+                wallForce += (A * Mathf.Exp(overlap / B)  + K * overlap)*normal - Kappa * overlap * Vector3.Dot(rb.velocity,tangent)*tangent;
+            }else{
+                //if the don't touch then we dont need to calculate the non-penetration and sliding force
+                wallForce +=A * Mathf.Exp(overlap / B)*normal;
+            }
 
         }
 
@@ -220,11 +240,13 @@ public class Agent : MonoBehaviour
     {
         var force = ComputeForce();
         force.y = 0;
+        //defult force for part1 and crowd following
+        rb.AddForce(force * 10, ForceMode.Force);
         // growing spriral
         //rb.AddForce(force * 10, ForceMode.Force);
 
         // eavder and pursuer
-        rb.AddRelativeForce(force * 10,ForceMode.Force);
+        //rb.AddRelativeForce(force * 10,ForceMode.Force);
 
         // Leader
         /*
@@ -247,6 +269,30 @@ public class Agent : MonoBehaviour
         }
         
         return spiralForce;
+    }
+
+    public Vector3 CrowdFollowing(float maxS){
+        var CrowdForce = Vector3.zero;
+        var panicParameter=0.8f;
+        var desired_direction =Vector3.Normalize(path[0] - transform.position);
+        var avgDir=Vector3.zero;
+
+        foreach(var n in perceivedNeighbors){
+            if(AgentManager.IsAgent(n)){
+                var neighbor = AgentManager.agentsObjs[n];
+                var neighbordir =neighbor.GetComponent<Rigidbody>().velocity;
+                //Debug.DrawLine(neighbor.transform.position,neighbordir,Color.red);
+                avgDir += neighbordir;
+            }
+        }
+        avgDir=avgDir/perceivedNeighbors.Count;
+        var ezero= ((1-panicParameter)*desired_direction+ panicParameter*avgDir.normalized).normalized;
+
+
+        var desired_speed = Mathf.Min(desired_direction.magnitude,maxS) * ezero;
+        CrowdForce= (mass*(desired_speed-GetVelocity())/Parameters.T);
+
+        return CrowdForce;  
     }
 
     private Vector3 CalculatePursueEvade()

@@ -11,12 +11,13 @@ public class AgentManager : MonoBehaviour
     public GameObject agentPrefab;
     public static Dictionary<GameObject, Agent> agentsObjs = new Dictionary<GameObject, Agent>();
 
-    private static List<Agent> agents = new List<Agent>();
+    public static List<Agent> agents = new List<Agent>();
     private GameObject agentParent;
     private Vector3 destination;
 
     public const float UPDATE_RATE = 0.0f;
     private const int PATHFINDING_FRAME_SKIP = 25;
+    private RaycastHit hitPosition;
 
     #region Unity Functions
 
@@ -73,9 +74,19 @@ public class AgentManager : MonoBehaviour
                 Debug.DrawLine(hit.position, hit.position + Vector3.up * 10, Color.red, 1000000);
                 foreach (var agent in agents)
                 {
-                    agent.ComputePath(hit.position);
+                    //agent.ComputePath(hit.position);
                 }
             }
+        }
+        if(true){
+            if(Input.GetMouseButtonDown(1))
+            {
+            // right click: move seletced agents
+                Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hitPosition, 100);
+                destination=hitPosition.point;
+                Debug.DrawLine(hitPosition.point, hitPosition.point + Vector3.up * 10, Color.red, 50);
+            }
+
         }
 
 #if UNITY_EDITOR
