@@ -14,6 +14,21 @@ The sliding force = K*edge to edge distance*Tangential velocity of agent * the v
 
 For crowd follower, we modified the desired direction of goal force such that the goal direction is only weighted 0.3 and the neighbors direction are weighted 0.7.
 
+To run evader and pursuer: 
+In function Update, comment out Line 48-49
+In function Compute Path, comment out Line 87-89
+In function Compute Force, uncomment Line 137
+
+To run Leader Follow
+In function Update, comment Line 48-49
+In function Compute Path, uncomment Line 83-88, and comment out line 89
+In function Compute Force, uncomment Line 122-128
+
+To run Leader Follow
+In function Update, comment Line 48-49
+In function Compute Path, comment out Line 87-89
+In function Compute Force, uncomment Line 122-128
+
 //part 1 demo link: https://youtu.be/mk2nA83SA9A
 //part 2 crowd following demo link: https://youtu.be/GXwMsl3ygDQ
 //Pursuer and Evader: https://youtu.be/WUWrS-SYe0U
