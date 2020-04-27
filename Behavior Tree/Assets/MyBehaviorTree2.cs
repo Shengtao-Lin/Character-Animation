@@ -37,7 +37,7 @@ public class MyBehaviorTree2 : MonoBehaviour
 		Val<float> pp = Val.V (() => police.transform.position.z);
 		Func<bool> act = () => (police.transform.position.z > 10);
 		Node roaming = new DecoratorLoop (
-			new Sequence(
+			new SequenceParallel(
 				this.ST_ApproachAndWait(this.wander1),
 				this.ST_ApproachAndWait(this.wander2),
 				this.ST_ApproachAndWait(this.wander3)));
