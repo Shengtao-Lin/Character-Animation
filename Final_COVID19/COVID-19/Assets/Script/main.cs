@@ -11,6 +11,8 @@ public class main : MonoBehaviour
     public static List<GameObject> agents=new List<GameObject>();
     // Start is called before the first frame update
     private static List<GameObject> doors=new List<GameObject>();
+    private static List<GameObject> functionalAreaDoor=new List<GameObject>();
+    public static List<GameObject> closeContact=new List<GameObject>();
     void Start()
     {
         #region initialtime
@@ -35,6 +37,15 @@ public class main : MonoBehaviour
         }
         #endregion
         
+        #region initialFunctionalDoor
+        for(int i=1;i<=3;i++){
+            tempName="Fdoor"+i.ToString();
+            functionalAreaDoor.Add(GameObject.Find(tempName));
+        }
+        #endregion
+
+
+
     
     }
 
@@ -46,9 +57,12 @@ public class main : MonoBehaviour
         
         
     }
+    public static bool IsAgent(GameObject obj){
+        return agents.Contains(obj);
+    }
 
     void CellDoor(){
-        if(hour>=8 & hour<=21){
+        if(hour>=8 & hour<=20){
             foreach (var item in doors)
             {
                 item.SetActive(false);
@@ -58,6 +72,24 @@ public class main : MonoBehaviour
             {
                 item.SetActive(true);
             }
+        }
+//Dining room door
+        if((hour>=8 & hour<=10)|(hour>=11 & hour<=14)|(hour>=18 & hour<=21)){
+            functionalAreaDoor[2].SetActive(false);
+        }else{
+            functionalAreaDoor[2].SetActive(true);
+        }
+        //working area door
+        if((hour>=9 & hour<=12)|(hour>=13 & hour<=17)){
+            functionalAreaDoor[1].SetActive(false);
+        }else{
+            functionalAreaDoor[1].SetActive(true);
+        }
+        //yard door
+        if(hour>=16 & hour<=19){
+            functionalAreaDoor[0].SetActive(false);
+        }else{
+            functionalAreaDoor[0].SetActive(true);
         }
     }
 

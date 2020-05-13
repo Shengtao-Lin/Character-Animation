@@ -6299,7 +6299,7 @@ GameObject:
   - component: {fileID: 1090567155}
   - component: {fileID: 1090567154}
   m_Layer: 0
-  m_Name: doory
+  m_Name: Fdoor1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9469,7 +9469,7 @@ GameObject:
   - component: {fileID: 1635745551}
   - component: {fileID: 1635745550}
   m_Layer: 0
-  m_Name: doorw
+  m_Name: Fdoor2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11972,7 +11972,7 @@ GameObject:
   - component: {fileID: 1962125079}
   - component: {fileID: 1962125078}
   m_Layer: 0
-  m_Name: doord
+  m_Name: Fdoor3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
