@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -9,18 +9,13 @@ public class Manager : MonoBehaviour
     // Start is called before the first frame update
 
     public GameObject agnets;
-
-    public Text time, day;
     private Dictionary<GameObject,Vector3> startPos = new Dictionary<GameObject, Vector3>();
     private List<GameObject> all_agents = new List<GameObject>();
     private List<NavMeshAgent> all_nav = new List<NavMeshAgent>();
 
-    private List<GameObject> eat = new List<GameObject>();
     private List<GameObject> work = new List<GameObject>();
     private List<GameObject> play = new List<GameObject>();
-    bool agentGo = true;
-    
-    bool agentBack = true;
+
 
 
     public Transform eat_trans;
@@ -44,43 +39,19 @@ public class Manager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        /*
-        if(agentGo)
-        {
-            foreach(GameObject agent in all_agents)
-            {
-                NavMeshAgent nav = agent.GetComponent<NavMeshAgent>();
-                //nav.destination = foo.position;
 
-                nav.SetDestination(foo.position);
-            }
-
-            BrakeAgent();
-            checkFlag();
-        }
-
-        
-        if(agentBack)
-        {
-            Debug.Log("agent go = " + agentGo);
-            foreach(GameObject agent in all_agents)
-            {
-                NavMeshAgent nav = agent.GetComponent<NavMeshAgent>();
-                nav.isStopped = false;
-                
-                Vector3 dest = startPos[agent];
-                dest.y = 0;
-                nav.SetDestination(dest);
-                
-                //nav.SetDestination(foo2.position);
-            }
-        }
-        */
-
-        if(main_script.hour >= 20 || main_script.hour <= 8)
+        if(main_script.hour > 20 || main_script.hour < 8)
         {
             //go back and stay in cell
-            Debug.Log("stay in cell");
+            //Debug.Log("stay in cell");
+            if(main_script.hour > 20 && main_script.hour <= 23)
+            {
+                main_script.scale = 5;
+            }
+            else
+            {
+                main_script.scale = 100;
+            }
             foreach(GameObject agent in all_agents)
             {
                 NavMeshAgent nav = agent.GetComponent<NavMeshAgent>();
@@ -89,107 +60,60 @@ public class Manager : MonoBehaviour
                 Vector3 dest = startPos[agent];
                 dest.y = 0;
                 nav.SetDestination(dest);
-                
-                //nav.SetDestination(foo2.position);
-
-                play.Clear();
-                eat.Clear();
-                work.Clear();
-                seletctAgents();
             }
 
             // seletct who work, who play, who eat
-            
-            
+
+            play.Clear();
+            work.Clear();
+            seletctAgents();
         }
-        else if(main_script.hour > 8)
+
+        else if(main_script.hour >= 8 && main_script.hour <= 13)
         {
-            // play
-            foreach(GameObject agent in play)
+            // all work
+            main_script.scale = 10;
+            foreach(GameObject agent in all_agents)
             {
                 NavMeshAgent nav = agent.GetComponent<NavMeshAgent>();
-                //nav.destination = foo.position;
-
-                nav.SetDestination(play_trans.position);
-            }
-            
-
-            // work
-            foreach(GameObject agent in work)
-            {
-                NavMeshAgent nav = agent.GetComponent<NavMeshAgent>();
-                //nav.destination = foo.position;
-
+                nav.isStopped = false;
                 nav.SetDestination(work_trans.position);
             }
+        }
 
-            // eat
-            foreach(GameObject agent in eat)
+        else if(main_script.hour > 13 && main_script.hour <= 16)
+        {
+            // all eat
+            main_script.scale = 10;
+            foreach(GameObject agent in all_agents)
             {
                 NavMeshAgent nav = agent.GetComponent<NavMeshAgent>();
-                //nav.destination = foo.position;
-
+                nav.isStopped = false;
                 nav.SetDestination(eat_trans.position);
-            }
-        }
-        
-        
-    }
-
-    // save for later
-    /*
-    void BrakeAgent()
-    {
-        float distance = 0;
-        foreach(NavMeshAgent nav in all_nav)
-        {
-            Vector3 nav_pos = nav.transform.position;
-            Vector3 foo_pos = foo.transform.position;
-            nav_pos.y = 0;
-            foo_pos.y = 0;
-
-            distance += Vector3.Distance(nav_pos,foo_pos);
-        }
-
-        //Debug.Log(distance);
-
-        if(distance/40 <= 5.0)
-        {
-            foreach(NavMeshAgent nav in all_nav)
-            {
-                nav.isStopped = true;
             }
         }
         else
         {
-            foreach(NavMeshAgent nav in all_nav)
+            // some play some work
+            main_script.scale = 10;
+            foreach(GameObject agent in play)
             {
+                NavMeshAgent nav = agent.GetComponent<NavMeshAgent>();
                 nav.isStopped = false;
+                nav.SetDestination(play_trans.position);
             }
-        }
-    }
 
-    void checkFlag()
-    {
-        // check if every agent is stopped, i.e. arrived at its destination
+            foreach(GameObject agent in work)
+            {
+                NavMeshAgent nav = agent.GetComponent<NavMeshAgent>();
+                nav.isStopped = false;
+                nav.SetDestination(work_trans.position);
+            }
 
-        // flag is true if every agent arrived
-        Debug.Log("executing checkFlag");
-        foreach(NavMeshAgent nav in all_nav)
-        {
-            if(nav.isStopped)
-            {
-                agentBack = true;
-                agentGo = false;
-            }
-            else
-            {
-                agentBack = false;
-                agentGo = true;
-            }
         }
+        
+        
     }
-    */
 
     void seletctAgents()
     {
@@ -200,7 +124,7 @@ public class Manager : MonoBehaviour
             choose_list.Add(agent,false);
         }
 
-        for(int i=0;i<12;i++)
+        for(int i=0;i<20;i++)
         {
             //select 12 agents to work
             int ran = (int)Random.Range(0f,39f);
@@ -213,18 +137,6 @@ public class Manager : MonoBehaviour
             play.Add(agent);
         }
 
-        for(int i=0;i<12;i++)
-        {
-            //select 12 agents to work
-            int ran = (int)Random.Range(0f,39f);
-            if( choose_list[all_agents [ran] ])
-            {
-                ran = (int)Random.Range(0f,39f);
-            }
-            var agent = all_agents[ran];
-            choose_list[agent] = true;
-            eat.Add(agent);
-        }
         
         foreach(GameObject agent in all_agents)
         {
