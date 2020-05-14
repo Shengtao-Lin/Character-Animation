@@ -34,6 +34,11 @@ public class Manager : MonoBehaviour
 
             //Debug.Log(agent.name + " " + startPos[agent.gameObject]);
         }
+        foreach (var item in all_nav)
+        {
+            item.speed=15;
+            item.acceleration=13;
+        }
     }
 
     // Update is called once per frame

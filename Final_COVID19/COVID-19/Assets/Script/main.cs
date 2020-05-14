@@ -6,7 +6,7 @@ using System;
 public class main : MonoBehaviour
 {
     public int scale;
-    private Text timeText,dayText,SText,IText,IPText;
+    private Text timeText,dayText,SText,IText,IPText,modeText;
     public double minute,hour,day;
     public Material MaterialI,MaterialS,MaterialIP;
 
@@ -34,6 +34,7 @@ public class main : MonoBehaviour
         SText=GameObject.Find("S").GetComponent<Text>();
         IText=GameObject.Find("I").GetComponent<Text>();
         IPText=GameObject.Find("IP").GetComponent<Text>();
+        modeText=GameObject.Find("Mode").GetComponent<Text>();
         #endregion
 
         #region initialAgents
@@ -77,7 +78,7 @@ public class main : MonoBehaviour
     void Update()
     {
         calculateTime();
-        print(closeContact.Count);
+        //print(closeContact.Count);
         
     }
 
@@ -88,11 +89,11 @@ public class main : MonoBehaviour
             foreach (var item in closeContact)
             {
                 chance  = rnd.Next(0, 100);
-                print(chance);
-                if(chance>95){
+                //print(chance);
+                if(chance>97){
                     SList.Remove(item);
                     chance  = rnd.Next(0, 100);
-                    if(chance>95){
+                    if(chance>97){
                         IPList.Add(item);
                         item.GetComponent<MeshRenderer> ().material = MaterialIP;
                     }else{
@@ -105,10 +106,10 @@ public class main : MonoBehaviour
             foreach (var item in closeContact)
             {
                 chance  = rnd.Next(0, 100);
-                if(chance>95){
+                if(chance>97){
                     SList.Remove(item);
                     chance  = rnd.Next(0, 100);
-                    if(chance>95){
+                    if(chance>97){
                         IPList.Add(item);
                         item.GetComponent<MeshRenderer> ().material = MaterialIP;
                     }else{
@@ -117,14 +118,15 @@ public class main : MonoBehaviour
                     }
                 }
             }
-        }else if(((int)mask)==3){
+        }
+        if(((int)mask)==3){
             foreach (var item in closeContactIP)
             {
                 chance  = rnd.Next(0, 100);
-                if(chance>95){
+                if(chance>97){
                     SList.Remove(item);
                     chance  = rnd.Next(0, 100);
-                    if(chance>95){
+                    if(chance>97){
                         IPList.Add(item);
                         item.GetComponent<MeshRenderer> ().material = MaterialIP;
                     }else{
@@ -133,14 +135,15 @@ public class main : MonoBehaviour
                     }
                 }
             }
-        }else if((((int)mask)==3)&&(dining==1)){
+        }
+        if((((int)mask)==3)&&(dining==1)){
             foreach (var item in closeContact)
             {
                 chance  = rnd.Next(0, 100);
-                if(chance>95){
+                if(chance>97){
                     SList.Remove(item);
                     chance  = rnd.Next(0, 100);
-                    if(chance>95){
+                    if(chance>97){
                         IPList.Add(item);
                         item.GetComponent<MeshRenderer> ().material = MaterialIP;
                     }else{
@@ -172,7 +175,7 @@ public class main : MonoBehaviour
         return closeContactIP.Contains(obj);
     }
     void CellDoor(){
-        if(hour>=8 & hour<=20){
+        if(hour>=8 && hour<=23){
             foreach (var item in doors)
             {
                 item.SetActive(false);
@@ -183,25 +186,31 @@ public class main : MonoBehaviour
                 item.SetActive(true);
             }
         }
-//Dining room door
-        if((hour>=8 && hour<=10)||(hour>=11 && hour<=14)||(hour>=18 && hour<=21)){
-            functionalAreaDoor[2].SetActive(false);
+    //Dining room door
+        if((hour>=12 && hour<=23)){
+            functionalAreaDoor[1].SetActive(false);
             dining=1;
         }else{
-            functionalAreaDoor[2].SetActive(true);
+            functionalAreaDoor[1].SetActive(true);
             dining=0;
         }
         //working area door
-        if((hour>=9 && hour<=12)||(hour>=13 && hour<=17)){
-            functionalAreaDoor[1].SetActive(false);
+        if((hour>=8 && hour<=23)){
+            functionalAreaDoor[2].SetActive(false);
         }else{
-            functionalAreaDoor[1].SetActive(true);
+            functionalAreaDoor[2].SetActive(true);
         }
         //yard door
-        if(hour>=16 && hour<=19){
+        if(hour>=15 && hour<=23){
             functionalAreaDoor[0].SetActive(false);
         }else{
             functionalAreaDoor[0].SetActive(true);
+        }
+
+        if((hour>=14 && hour<=17)){
+            dining=1;
+        }else{
+            dining=0;
         }
     }
 
@@ -211,6 +220,17 @@ public class main : MonoBehaviour
         SText.text="Susceptible Population:" + (SList.Count).ToString();
         IPText.text="People in Incubation Period: " + (IPList.Count).ToString();
         IText.text="Infected Population: "+ (IList.Count).ToString();
+        if ((int)mask==1)
+        {
+            modeText.text="No Mask";
+        }else if ((int)mask==2)
+        {
+            modeText.text="Mask For All";
+        }else if ((int)mask==3)
+        {
+            modeText.text="Mask For Infected";
+        }
+        
     }
     void calculateTime(){
         minute+=Time.deltaTime*scale;
@@ -222,6 +242,7 @@ public class main : MonoBehaviour
         }else if(hour>=24){
             day++;
             hour=0;
+            print("Day:"+day.ToString()+" S: "+ (SList.Count).ToString()+" I: "+ (IList.Count).ToString()+" IP: "+ (IPList.Count).ToString());
         }
         TextCal();
     }
