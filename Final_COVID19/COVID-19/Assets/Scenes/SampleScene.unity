@@ -1359,7 +1359,7 @@ MonoBehaviour:
   MaterialI: {fileID: 2100000, guid: a428959f95b8bdb47a6316624a4f0e2f, type: 2}
   MaterialS: {fileID: 2100000, guid: 12fd3458c6e60704fac95de115a46513, type: 2}
   MaterialIP: {fileID: 2100000, guid: 8c7510a9c41ca454f8f6d3163eb79ebb, type: 2}
-  mask: 1
+  mask: 2
 --- !u!4 &229568794
 Transform:
   m_ObjectHideFlags: 0
