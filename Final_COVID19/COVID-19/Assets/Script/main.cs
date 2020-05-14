@@ -6,7 +6,7 @@ public class main : MonoBehaviour
 {
     public int scale;
     private Text timeText,dayText;
-    private double minute,hour,day;
+    public double minute,hour,day;
 
     public static List<GameObject> agents=new List<GameObject>();
     // Start is called before the first frame update
